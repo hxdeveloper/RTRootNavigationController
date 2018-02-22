@@ -23,6 +23,17 @@
 #import "UIViewController+RTRootNavigationController.h"
 #import "RTRootNavigationController.h"
 
+static inline UIViewController *_RTContainerController(UIViewController *viewController) {
+    UIViewController *vc = viewController;
+    if ([vc isKindOfClass:[RTContainerController class]]) {
+        return nil;
+    }
+    while (vc && ![vc isKindOfClass:[RTContainerController class]]) {
+        vc = vc.parentViewController;
+    }
+    return vc;
+}
+
 @implementation UIViewController (RTRootNavigationController)
 @dynamic rt_disableInteractivePop;
 
@@ -49,5 +60,106 @@
     }
     return (RTRootNavigationController *)vc;
 }
+
+#pragma mark - HX
+
++ (void)load
+{
+    Method originalMethod = class_getInstanceMethod(self, @selector(removeFromParentViewController));
+    Method swizzledMethod = class_getInstanceMethod(self, @selector(rt_removeFromParentViewController));
+    method_exchangeImplementations(originalMethod, swizzledMethod);
+}
+
+- (void)rt_removeFromParentViewController
+{
+    [_RTContainerController(self) removeFromParentViewController];
+    [self rt_removeFromParentViewController];
+}
+
+
+- (void)setRt_fullScreenPopGestureEnabled:(BOOL)rt_fullScreenPopGestureEnabled
+{
+    objc_setAssociatedObject(self, @selector(rt_fullScreenPopGestureEnabled), @(rt_fullScreenPopGestureEnabled), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [self.rt_navigationController resetInteractivePopGestureRecognizer];
+}
+
+- (BOOL)rt_fullScreenPopGestureEnabled
+{
+    id rt_f = objc_getAssociatedObject(self, @selector(rt_fullScreenPopGestureEnabled));
+    if (rt_f == nil) {
+        rt_f = @(YES);
+        self.rt_fullScreenPopGestureEnabled = YES;
+    }
+    return [rt_f boolValue];
+}
+
+
+
+- (void)setRt_prefersNavigationBarHidden:(BOOL)rt_prefersNavigationBarHidden
+{
+    objc_setAssociatedObject(self, @selector(rt_prefersNavigationBarHidden), @(rt_prefersNavigationBarHidden), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (BOOL)rt_prefersNavigationBarHidden
+{
+    return [objc_getAssociatedObject(self, @selector(rt_prefersNavigationBarHidden)) boolValue];
+}
+
+- (void)setRt_interactivePopMaxAllowedInitialDistanceToLeftEdge:(CGFloat)distance
+{
+    SEL key = @selector(rt_interactivePopMaxAllowedInitialDistanceToLeftEdge);
+    objc_setAssociatedObject(self, key, @(MAX(0, distance)), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (CGFloat)rt_interactivePopMaxAllowedInitialDistanceToLeftEdge
+{
+#if CGFLOAT_IS_DOUBLE
+    return [objc_getAssociatedObject(self, _cmd) doubleValue];
+#else
+    return [objc_getAssociatedObject(self, _cmd) floatValue];
+#endif
+}
+
+- (UIBarButtonItem *)customBackItemWithTarget:(id)target
+                                       action:(SEL)action
+{
+    return [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Back", nil)
+                                            style:UIBarButtonItemStylePlain
+                                           target:target
+                                           action:action];
+}
+
+
+- (BOOL)fd_interactivePopDisabled
+{
+    return self.rt_disableInteractivePop;
+}
+
+- (void)setFd_interactivePopDisabled:(BOOL)disabled
+{
+    self.rt_disableInteractivePop = disabled;
+}
+
+- (BOOL)fd_prefersNavigationBarHidden
+{
+    return self.rt_prefersNavigationBarHidden;
+}
+
+- (void)setFd_prefersNavigationBarHidden:(BOOL)hidden
+{
+    self.rt_prefersNavigationBarHidden = hidden;
+}
+
+
+- (CGFloat)fd_interactivePopMaxAllowedInitialDistanceToLeftEdge
+{
+    return self.rt_interactivePopMaxAllowedInitialDistanceToLeftEdge;
+}
+
+- (void)setFd_interactivePopMaxAllowedInitialDistanceToLeftEdge:(CGFloat)distance
+{
+    self.rt_interactivePopMaxAllowedInitialDistanceToLeftEdge = distance;
+}
+
 
 @end

@@ -92,6 +92,21 @@ IB_DESIGNABLE
  */
 - (instancetype)initWithRootViewControllerNoWrapping:(UIViewController *)rootViewController;
 
+/**
+ *  @author HeXun, 17-01-03 15:01:58
+ *
+ *  @brief commonInit
+ */
+- (void)_commonInit;
+
+/**
+ *  @author HeXun, 17-01-05 13:01:07
+ *
+ *  @brief resetting interactivePopGestureRecognizer
+ *
+ */
+- (void)resetInteractivePopGestureRecognizer;
+
 /*!
  *  @brief Remove a content view controller from the stack
  *
