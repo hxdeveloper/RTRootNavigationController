@@ -588,80 +588,14 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
 @end
 
 @interface UIScrollView (_RTFullscreenPopGestureRecognizer)
+/// descriptionrt_isScrollToLeft
+@property(nonatomic ,assign ,readonly) BOOL rt_isScrollToLeft;
 @end
 @implementation UIScrollView (_RTFullscreenPopGestureRecognizer)
 ///scrollView已经滑动到最左侧
-- (BOOL)_scrollViewToLeft:(UIScrollView*)sc
-{
-    if (!sc) return YES;
-    if (sc.contentOffset.x <= 0) {
-        return [self _scrollViewToLeft:sc.superview.rt_scrollView];
-    }
-    return NO;
-}
-
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
-{
-    if (gestureRecognizer.state == UIGestureRecognizerStateBegan && gestureRecognizer.view !=otherGestureRecognizer.view) {
-        if ([gestureRecognizer.view.class isSubclassOfClass:[UIScrollView class]]) {
-            UIScrollView *sc = (UIScrollView *)gestureRecognizer.view;
-            
-            //            CGPoint velocity = [sc.panGestureRecognizer velocityInView:sc];//速度
-            //滑动方向
-            CGPoint point = [sc.panGestureRecognizer translationInView:sc];
-            /// 非右滑 不处理
-            if (point.x <= 0) {
-                return NO;
-            }
-            
-            UIView *otherView = otherGestureRecognizer.view;
-            UIViewController *otherController = otherView.rt_viewController;
-            
-            if(![otherView.class isSubclassOfClass:[UIScrollView class]]&&[otherController.class isSubclassOfClass:[RTRootNavigationController class]]){
-                
-                UIViewController *lastViewController = ((RTRootNavigationController *)otherController).rt_topViewController;
-                ///滑动返回关闭 不处理
-                if (lastViewController.rt_disableInteractivePop || !lastViewController.rt_fullScreenPopGestureEnabled) {
-                    return NO;
-                }
-                
-                BOOL(^willBack)(UIScrollView *_scrollView) = ^BOOL(UIScrollView *_scrollView) {
-                    //此处处理左侧弹性动画
-                    _scrollView.scrollEnabled = NO;
-                    _scrollView.scrollEnabled = YES;
-                    return YES;
-                };
-                
-                // 优先判断 HXPageViewController 依据 selectedIndex==0 已经滑动到最左侧
-                // HXPageViewController是对UIPageViewController的封装，_UIQueuingScrollView 特性 导致无法利用 contentOffset.x 来判断是否滑动到了最左侧
-                // HXPageViewController 的实现 基于ARGPageViewController同步 具体实现请参考
-                // https://github.com/arcangelw/ARGKit/blob/develop/ARGKit/Classes/UIKit/ARGPageViewController.h
-                BOOL(^lastWillBack)(UIViewController *last) = ^BOOL(UIViewController *last){
-                    if ([last respondsToSelector:NSSelectorFromString(@"selectedIndex")]) {
-                        NSUInteger selectedIndex = [last performSelector:NSSelectorFromString(@"selectedIndex")];
-                        if (selectedIndex == 0) {
-                            return willBack(sc);
-                        }
-                    }
-                    return NO;
-                };
-                
-                
-                ///sc 如果是 _UIQueuingScrollView
-                ///_lastViewController 则是其层级嵌套的 HXPageViewController|ARGPageViewController 控制器
-                UIViewController *_lastViewController = sc.rt_viewController.parentViewController;
-                /// 多层嵌套 优先判断最里层 pageViewController
-                if (_lastViewController != lastViewController && ([_lastViewController isKindOfClass:NSClassFromString(@"HXPageViewController")]||[_lastViewController isKindOfClass:NSClassFromString(@"ARGPageViewController")])) {
-                    return lastWillBack(_lastViewController);
-                }
-                else if ([lastViewController isKindOfClass:NSClassFromString(@"HXPageViewController")]||[lastViewController isKindOfClass:NSClassFromString(@"ARGPageViewController")]) {
-                    return lastWillBack(lastViewController);
-                }
-                else if([self _scrollViewToLeft:sc]){
-                    return willBack(sc);
-                }
-            }
-        }
+- (BOOL)rt_isScrollToLeft{
+    if (self.contentOffset.x <= 0) {
+        return self.superview.rt_scrollView?self.superview.rt_scrollView.rt_isScrollToLeft:YES;
     }
     return NO;
 }
@@ -678,7 +612,7 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
     if (self.navigationController.viewControllers.count <= 1) {
         return NO;
     }
-    
+
     // Disable when the active view controller doesn't allow interactive pop.
     UIViewController *topViewController = RTSafeUnwrapViewController(self.navigationController.topViewController);
     if (topViewController.rt_disableInteractivePop) {
@@ -710,6 +644,70 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
         return !((UIControl *)touch.view).enabled;
     }
     return YES;
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+    if (gestureRecognizer.state == UIGestureRecognizerStateBegan && gestureRecognizer.view !=otherGestureRecognizer.view) {
+        if ([otherGestureRecognizer.view.class isSubclassOfClass:[UIScrollView class]]) {
+            UIScrollView *sc = (UIScrollView *)otherGestureRecognizer.view;
+            
+            //            CGPoint velocity = [sc.panGestureRecognizer velocityInView:sc];//速度
+            //滑动方向
+            CGPoint point = [sc.panGestureRecognizer translationInView:sc];
+            /// 非右滑 不处理
+            if (point.x <= 0) {
+                return NO;
+            }
+            
+            if(self.navigationController){
+                
+                UIViewController *lastViewController = ((RTRootNavigationController *)self.navigationController).rt_topViewController;
+                ///滑动返回关闭 不处理
+                if (lastViewController.rt_disableInteractivePop || !lastViewController.rt_fullScreenPopGestureEnabled) {
+                    return NO;
+                }
+                
+                BOOL(^willBack)(UIScrollView *_scrollView) = ^BOOL(UIScrollView *_scrollView) {
+                    //此处处理左侧弹性动画
+                    _scrollView.scrollEnabled = NO;
+                    _scrollView.scrollEnabled = YES;
+                    return YES;
+                };
+                
+                // 优先判断 HXPageViewController 依据 selectedIndex==0 已经滑动到最左侧
+                // HXPageViewController是对UIPageViewController的封装，_UIQueuingScrollView 特性 导致无法利用 contentOffset.x 来判断是否滑动到了最左侧
+                // HXPageViewController 的实现 基于ARGPageViewController同步 具体实现请参考
+                // https://github.com/arcangelw/ARGKit/blob/develop/ARGKit/Classes/UIKit/ARGPageViewController.h
+                BOOL(^lastWillBack)(UIViewController *last) = ^BOOL(UIViewController *last){
+                    @try{
+                        if ([last respondsToSelector:NSSelectorFromString(@"selectedIndex")]) {
+                            NSUInteger selectedIndex = [last performSelector:NSSelectorFromString(@"selectedIndex")];
+                            if (selectedIndex == 0) {
+                                return willBack(sc);
+                            }
+                        }
+                    }@catch(NSException *e){ return NO;}
+                    return NO;
+                };
+                
+                ///sc 如果是 _UIQueuingScrollView 项目中最多嵌套两层，如果有特殊情况，再说吧
+                ///_lastViewController 则是其层级嵌套的 HXPageViewController|ARGPageViewController 控制器
+                UIViewController *_lastViewController = sc.rt_viewController.parentViewController;
+                /// 多层嵌套 优先判断最里层 pageViewController
+                if (_lastViewController != lastViewController && ([_lastViewController isKindOfClass:NSClassFromString(@"HXPageViewController")]||[_lastViewController isKindOfClass:NSClassFromString(@"ARGPageViewController")])) {
+                    return lastWillBack(_lastViewController);
+                }
+                else if ([lastViewController isKindOfClass:NSClassFromString(@"HXPageViewController")]||[lastViewController isKindOfClass:NSClassFromString(@"ARGPageViewController")]) {
+                    return lastWillBack(lastViewController);
+                }
+                else if(sc.rt_isScrollToLeft){
+                    return willBack(sc);
+                }
+            }
+        }
+    }
+    return NO;
 }
 @end
 
