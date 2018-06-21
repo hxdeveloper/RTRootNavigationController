@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="4yn-xn-OPt">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="4yn-xn-OPt">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13527"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="Segues with Peek and Pop" minToolsVersion="7.1"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -328,7 +328,7 @@
         <!--List-->
         <scene sceneID="XTj-ye-u6i">
             <objects>
-                <collectionViewController storyboardIdentifier="List" title="List" id="h6O-Eh-Am6" customClass="RTItemListViewController" sceneMemberID="viewController">
+                <collectionViewController storyboardIdentifier="List" title="List" hidesBottomBarWhenPushed="YES" id="h6O-Eh-Am6" customClass="RTItemListViewController" sceneMemberID="viewController">
                     <collectionView key="view" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" id="r1J-tV-6Oq">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="603"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -463,27 +463,27 @@
         <!--Remove-->
         <scene sceneID="VkP-m0-GAj">
             <objects>
-                <viewController storyboardIdentifier="Remove" title="Remove" id="gqE-4J-Jo2" customClass="RTPushRemoveViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="Remove" title="Remove" hidesBottomBarWhenPushed="YES" id="gqE-4J-Jo2" customClass="RTPushRemoveViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="D1c-v8-9zo"/>
                         <viewControllerLayoutGuide type="bottom" id="4R8-bO-H3O"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="TDX-kp-fGS">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="603"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="foX-q0-Q2F">
-                                <rect key="frame" x="68.5" y="286.5" width="238" height="30"/>
+                                <rect key="frame" x="68.5" y="318.5" width="238" height="30"/>
                                 <state key="normal" title="Push to next, and this will removed"/>
                                 <connections>
                                     <action selector="onPush:" destination="gqE-4J-Jo2" eventType="touchUpInside" id="hl5-wW-2Fw"/>
                                 </connections>
                             </button>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="AU8-eo-Xkv">
-                                <rect key="frame" x="163" y="191.5" width="51" height="31"/>
+                                <rect key="frame" x="163" y="223.5" width="51" height="31"/>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Animated" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Li0-oL-HF2">
-                                <rect key="frame" x="151" y="230.5" width="73" height="21"/>
+                                <rect key="frame" x="151" y="262.5" width="73" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
@@ -668,6 +668,6 @@
         <segue reference="5Bf-mB-c87"/>
         <segue reference="y8i-Aj-KhW"/>
         <segue reference="IZr-he-VVi"/>
-        <segue reference="C8e-8u-cs3"/>
+        <segue reference="fgk-3y-5bQ"/>
     </inferredMetricsTieBreakers>
 </document>

@@ -20,7 +20,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    self.navigationController.navigationBarHidden = YES;
+//    self.navigationController.navigationBarHidden = YES;
+    self.rt_prefersNavigationBarHidden = YES;
 #if RT_INTERACTIVE_PUSH
     self.rt_navigationController.rt_enableInteractivePush = YES;
 #endif
@@ -34,7 +35,7 @@
 - (void)didMoveToParentViewController:(UIViewController *)parent
 {
     [super didMoveToParentViewController:parent];
-    self.navigationController.navigationBarHidden = YES;
+//    self.navigationController.navigationBarHidden = YES;
 }
 
 - (IBAction)onBack:(id)sender {

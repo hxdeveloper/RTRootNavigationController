@@ -22,9 +22,36 @@
 
 #import "UIViewController+RTRootNavigationController.h"
 #import "RTRootNavigationController.h"
+#import "RTGestureProcess.h"
+#import "RTDefaultTransitionAnimation.h"
+
+static inline UIViewController *_RTContainerController(UIViewController *viewController) {
+    UIViewController *vc = viewController;
+    if ([vc isKindOfClass:[RTContainerController class]]) {
+        return nil;
+    }
+    while (vc && ![vc isKindOfClass:[RTContainerController class]]) {
+        vc = vc.parentViewController;
+    }
+    return vc;
+}
 
 @implementation UIViewController (RTRootNavigationController)
 @dynamic rt_disableInteractivePop;
+@dynamic rt_prefersNavigationBarHidden;
+
++ (void)load
+{
+    Method originalMethod = class_getInstanceMethod(self, @selector(removeFromParentViewController));
+    Method swizzledMethod = class_getInstanceMethod(self, @selector(rt_removeFromParentViewController));
+    method_exchangeImplementations(originalMethod, swizzledMethod);
+}
+
+- (void)rt_removeFromParentViewController
+{
+    [_RTContainerController(self) removeFromParentViewController];
+    [self rt_removeFromParentViewController];
+}
 
 - (void)setRt_disableInteractivePop:(BOOL)rt_disableInteractivePop
 {
@@ -34,6 +61,46 @@
 - (BOOL)rt_disableInteractivePop
 {
     return [objc_getAssociatedObject(self, @selector(rt_disableInteractivePop)) boolValue];
+}
+
+- (void)setRt_prefersNavigationBarHidden:(BOOL)rt_prefersNavigationBarHidden
+{
+    objc_setAssociatedObject(self, @selector(rt_prefersNavigationBarHidden), @(rt_prefersNavigationBarHidden), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (BOOL)rt_prefersNavigationBarHidden
+{
+    return [objc_getAssociatedObject(self, @selector(rt_prefersNavigationBarHidden)) boolValue];
+}
+
+- (void)setRt_popGestureProcessing:(id<RTGestureRecognizerDelegate>)rt_popGestureProcessing
+{
+    objc_setAssociatedObject(self, @selector(rt_popGestureProcessing), rt_popGestureProcessing, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (id<RTGestureRecognizerDelegate>)rt_popGestureProcessing
+{
+    id<RTGestureRecognizerDelegate> g = objc_getAssociatedObject(self, @selector(rt_popGestureProcessing));
+    if (!g) {
+        g = [RTGestureProcess new];
+        self.rt_popGestureProcessing = g;
+    }
+    return g;
+}
+
+- (void)setRt_animationProcessing:(id<RTViewControllerAnimatedTransitioning>)rt_animationProcessing
+{
+    objc_setAssociatedObject(self, @selector(rt_animationProcessing), rt_animationProcessing, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (id<RTViewControllerAnimatedTransitioning>)rt_animationProcessing
+{
+    id<RTViewControllerAnimatedTransitioning> r = objc_getAssociatedObject(self, @selector(rt_animationProcessing));
+    if (!r) {
+        r = [RTDefaultTransitionAnimation new];
+        self.rt_animationProcessing = r;
+    }
+    return r;
 }
 
 - (Class)rt_navigationBarClass

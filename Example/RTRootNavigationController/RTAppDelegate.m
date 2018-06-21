@@ -37,13 +37,13 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
-    /*
+    
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     UIStoryboard *story = [UIStoryboard storyboardWithName:@"Main"
                                                     bundle:nil];
     UITabBarController *tabController = [[RTTabBarController alloc] init];
 //    tabController.tabBar.translucent = NO;
-    if (YES) {
+    if (NO) {
         tabController.viewControllers = @[[[RTContainerNavigationController alloc] initWithRootViewController:[story instantiateViewControllerWithIdentifier:@"Root"]],
                                           [[RTContainerNavigationController alloc] initWithRootViewController:[story instantiateViewControllerWithIdentifier:@"Remove"]],
                                           [[RTContainerNavigationController alloc] initWithRootViewController:[story instantiateViewControllerWithIdentifier:@"Scroll"]],
@@ -59,7 +59,7 @@
         self.window.rootViewController = tabController;
     }
     [self.window makeKeyAndVisible];
-    */
+    
     return YES;
 }
 

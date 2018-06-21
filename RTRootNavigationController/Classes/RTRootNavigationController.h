@@ -26,6 +26,7 @@
 
 #import "UIViewController+RTRootNavigationController.h"
 
+NS_ASSUME_NONNULL_BEGIN
 
 @interface RTContainerController : UIViewController
 @property (nonatomic, readonly, strong) __kindof UIViewController *contentViewController;
@@ -58,6 +59,9 @@ self.window.rootViewController = [[RTRootNavigationController alloc] initWithRoo
 IB_DESIGNABLE
 @interface RTRootNavigationController : UINavigationController
 
+/// init parameter
+- (void)_commonInit;
+
 /*!
  *  @brief use system original back bar item or custom back bar item returned by
  *  @c -(UIBarButtonItem*)customBackItemWithTarget:action: , default is NO
@@ -65,18 +69,18 @@ IB_DESIGNABLE
  */
 @property (nonatomic, assign) IBInspectable BOOL useSystemBackBarButtonItem;
 
-/// Weather each individual navigation bar uses the visual style of root navigation bar. Default is @b NO
+/// Weather each individual navigation bar uses the visual style of root navigation bar. Default is @b YES
 @property (nonatomic, assign) IBInspectable BOOL transferNavigationBarAttributes;
 
 /*!
  *  @brief use this property instead of @c visibleViewController to get the current visiable content view controller
  */
-@property (nonatomic, readonly, strong) UIViewController *rt_visibleViewController;
+@property (nonatomic, readonly, strong, nullable) UIViewController *rt_visibleViewController;
 
 /*!
  *  @brief use this property instead of @c topViewController to get the content view controller on the stack top
  */
-@property (nonatomic, readonly, strong) UIViewController *rt_topViewController;
+@property (nonatomic, readonly, strong, nullable) UIViewController *rt_topViewController;
 
 /*!
  *  @brief use this property to get all the content view controllers;
@@ -109,7 +113,7 @@ IB_DESIGNABLE
  */
 - (void)pushViewController:(UIViewController *)viewController
                   animated:(BOOL)animated
-                  complete:(void(^)(BOOL finished))block;
+                  complete:(nullable void(^)(BOOL finished))block;
 
 /*!
  *  @brief Pop current view controller on top with a complete handler
@@ -119,7 +123,7 @@ IB_DESIGNABLE
  *
  *  @return The current UIViewControllers(content controller) poped from the stack
  */
-- (UIViewController *)popViewControllerAnimated:(BOOL)animated complete:(void(^)(BOOL finished))block;
+- (nullable UIViewController *)popViewControllerAnimated:(BOOL)animated complete:(nullable void(^)(BOOL finished))block;
 
 /*!
  *  @brief Pop to a specific view controller with a complete handler
@@ -130,9 +134,9 @@ IB_DESIGNABLE
  *
  *  @return A array of UIViewControllers(content controller) poped from the stack
  */
-- (NSArray <__kindof UIViewController *> *)popToViewController:(UIViewController *)viewController
+- (nullable NSArray <__kindof UIViewController *> *)popToViewController:(UIViewController *)viewController
                                                       animated:(BOOL)animated
-                                                      complete:(void(^)(BOOL finished))block;
+                                                      complete:(nullable void(^)(BOOL finished))block;
 
 /*!
  *  @brief Pop to root view controller with a complete handler
@@ -142,6 +146,8 @@ IB_DESIGNABLE
  *
  *  @return A array of UIViewControllers(content controller) poped from the stack
  */
-- (NSArray <__kindof UIViewController *> *)popToRootViewControllerAnimated:(BOOL)animated
-                                                                  complete:(void(^)(BOOL finished))block;
+- (nullable NSArray <__kindof UIViewController *> *)popToRootViewControllerAnimated:(BOOL)animated
+                                                                  complete:(nullable void(^)(BOOL finished))block;
 @end
+
+NS_ASSUME_NONNULL_END

@@ -20,8 +20,11 @@
 
 #import <UIKit/UIKit.h>
 
-@class RTRootNavigationController;
+NS_ASSUME_NONNULL_BEGIN
 
+@class RTRootNavigationController;
+@protocol RTGestureRecognizerDelegate;
+@protocol RTViewControllerAnimatedTransitioning;
 @protocol RTNavigationItemCustomizable <NSObject>
 
 @optional
@@ -50,13 +53,29 @@ IB_DESIGNABLE
 /*!
  *  @brief @c self\.navigationControlle will get a wrapping @c UINavigationController, use this property to get the real navigation controller
  */
-@property (nonatomic, readonly, strong) RTRootNavigationController *rt_navigationController;
+@property (nonatomic, readonly, strong, nullable) RTRootNavigationController *rt_navigationController;
 
 /*!
  *  @brief Override this method to provide a custom subclass of @c UINavigationBar, defaults return nil
  *
  *  @return new UINavigationBar class
  */
-- (Class)rt_navigationBarClass;
+- (nullable Class)rt_navigationBarClass;
+
+/*!
+ *   Indicate this view controller prefers its navigation bar hidden or not,
+ *   checked when view controller based navigation bar's appearance is enabled.
+ *   Default to NO, bars are more likely to show.
+ */
+@property (nonatomic, assign) IBInspectable BOOL rt_prefersNavigationBarHidden;
+
+
+/// rt_popGestureProcessing
+@property(nonatomic ,strong) id<RTGestureRecognizerDelegate> rt_popGestureProcessing;
+
+/// rt_animationProcessing
+@property(nonatomic ,strong) id<RTViewControllerAnimatedTransitioning> rt_animationProcessing;
 
 @end
+
+NS_ASSUME_NONNULL_END

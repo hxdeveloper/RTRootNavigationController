@@ -24,6 +24,7 @@
 
 #import "UIViewController+RTRootNavigationController.h"
 
+#import "RTProtocol.h"
 
 @interface NSArray<ObjectType> (RTRootNavigationController)
 - (NSArray *)rt_map:(id(^)(ObjectType obj, NSUInteger index))block;
@@ -242,6 +243,7 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
         self.contentViewController.view.frame = self.view.bounds;
         [self.view addSubview:self.contentViewController.view];
     }
+    self.contentViewController.rt_popGestureProcessing.container = self;
 }
 
 - (void)viewDidLayoutSubviews
@@ -371,13 +373,22 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
 
 - (BOOL)rt_hasSetInteractivePop
 {
-    return !!objc_getAssociatedObject(self, @selector(rt_disableInteractivePop));
+    
+    BOOL hasSetInteractivePop = !!objc_getAssociatedObject(self, @selector(rt_disableInteractivePop));
+    /// 默认不关闭
+    if (!hasSetInteractivePop) {
+        self.rt_disableInteractivePop = NO;
+    }
+    return YES;
 }
 
 @end
 
-
+@interface RTContainerNavigationController()
+<UINavigationControllerDelegate>
+@end
 @implementation RTContainerNavigationController
+
 
 - (instancetype)initWithRootViewController:(UIViewController *)rootViewController
 {
@@ -394,7 +405,7 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+    super.delegate = self;
     //self.interactivePopGestureRecognizer.delegate = nil;
     self.interactivePopGestureRecognizer.enabled = NO;
     
@@ -416,6 +427,15 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
         self.navigationBar.backIndicatorTransitionMaskImage = self.navigationController.navigationBar.backIndicatorTransitionMaskImage;
     }
     [self.view layoutIfNeeded];
+}
+
+- (void)navigationController:(UINavigationController *)navigationController
+      willShowViewController:(UIViewController *)viewController
+                    animated:(BOOL)animated
+{
+    if (viewController == self.viewControllers.lastObject) {
+    [self setNavigationBarHidden:viewController.rt_prefersNavigationBarHidden animated:NO];
+    }
 }
 
 - (UITabBarController *)tabBarController
@@ -592,7 +612,8 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
 
 - (void)_commonInit
 {
-    
+    _useSystemBackBarButtonItem = NO;
+    _transferNavigationBarAttributes = YES;
 }
 
 #pragma mark - Overrides
@@ -645,6 +666,8 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    //    self.interactivePopGestureRecognizer.delegate = nil;
+    self.interactivePopGestureRecognizer.enabled = NO;
     self.view.backgroundColor = [UIColor whiteColor];
     
     [super setDelegate:self];
@@ -908,6 +931,7 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
 {
     BOOL isRootVC = viewController == navigationController.viewControllers.firstObject;
     viewController = RTSafeUnwrapViewController(viewController);
+    
     if (!isRootVC) {
         
         BOOL hasSetLeftItem = viewController.navigationItem.leftBarButtonItem != nil;
@@ -949,16 +973,16 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
        didShowViewController:(UIViewController *)viewController
                     animated:(BOOL)animated
 {
-    BOOL isRootVC = viewController == navigationController.viewControllers.firstObject;
-    viewController = RTSafeUnwrapViewController(viewController);
-    if (viewController.rt_disableInteractivePop) {
-        self.interactivePopGestureRecognizer.delegate = nil;
-        self.interactivePopGestureRecognizer.enabled = NO;
-    } else {
-        self.interactivePopGestureRecognizer.delaysTouchesBegan = YES;
-        self.interactivePopGestureRecognizer.delegate = self;
-        self.interactivePopGestureRecognizer.enabled = !isRootVC;
-    }
+//    BOOL isRootVC = viewController == navigationController.viewControllers.firstObject;
+//    viewController = RTSafeUnwrapViewController(viewController);
+//    if (viewController.rt_disableInteractivePop) {
+//        self.interactivePopGestureRecognizer.delegate = nil;
+//        self.interactivePopGestureRecognizer.enabled = NO;
+//    } else {
+//        self.interactivePopGestureRecognizer.delaysTouchesBegan = YES;
+//        self.interactivePopGestureRecognizer.delegate = self;
+//        self.interactivePopGestureRecognizer.enabled = !isRootVC;
+//    }
     
     [RTRootNavigationController attemptRotationToDeviceOrientation];
     
@@ -999,6 +1023,9 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
         return [self.rt_delegate navigationController:navigationController
           interactionControllerForAnimationController:animationController];
     }
+    if ([animationController conformsToProtocol:@protocol(RTViewControllerAnimatedTransitioning)]) {
+       return ((id<RTViewControllerAnimatedTransitioning>)animationController).interactiveTransition;
+    }
     return nil;
 }
 
@@ -1013,7 +1040,24 @@ __attribute((overloadable)) static inline UIViewController *RTSafeWrapViewContro
                                    fromViewController:RTSafeUnwrapViewController(fromVC)
                                      toViewController:RTSafeUnwrapViewController(toVC)];
     }
-    return nil;
+    id<RTViewControllerAnimatedTransitioning> transition = nil;
+    switch (operation) {
+        case UINavigationControllerOperationPush:
+        {
+            transition = RTSafeUnwrapViewController(toVC).rt_animationProcessing;
+            transition.operation = operation;
+            break;
+        }
+        case UINavigationControllerOperationPop:
+        {
+            transition = RTSafeUnwrapViewController(fromVC).rt_animationProcessing;
+            transition.operation = operation;
+            break;
+        }
+        default:
+            break;
+    }
+    return transition;
 }
 
 
