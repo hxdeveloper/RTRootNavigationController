@@ -49,7 +49,9 @@
                                           [[RTContainerNavigationController alloc] initWithRootViewController:[story instantiateViewControllerWithIdentifier:@"Scroll"]],
                                           [[RTContainerNavigationController alloc] initWithRootViewController:[story instantiateViewControllerWithIdentifier:@"Table"]],
                                           [[RTContainerNavigationController alloc] initWithRootViewController:[story instantiateViewControllerWithIdentifier:@"Status"]]];
-        self.window.rootViewController = [[RTRootNavigationController alloc] initWithRootViewControllerNoWrapping:tabController];
+        RTRootNavigationController *nav = [[RTRootNavigationController alloc] initWithRootViewControllerNoWrapping:tabController];
+        nav.useSystemBackBarButtonItem = YES;
+        self.window.rootViewController = nav;
     }
     else {
         tabController.viewControllers = @[[[RTRootNavigationController alloc] initWithRootViewController:[story instantiateViewControllerWithIdentifier:@"Root"]],

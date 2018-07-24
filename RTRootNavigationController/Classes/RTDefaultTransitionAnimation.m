@@ -13,10 +13,24 @@
 #define RT_SWAP(_a_, _b_)  do { __typeof__(_a_) _tmp_ = (_a_); (_a_) = (_b_); (_b_) = _tmp_; } while (0)
 #endif
 
+@interface UIView (RTDefaultTransitionAnimation)
+- (BOOL)rt_isContains:(UIView *)view;
+@end
+@implementation UIView (RTDefaultTransitionAnimation)
+- (BOOL)rt_isContains:(UIView *)view
+{
+    if (self.hidden) { return NO; }
+    if (!self.superview) { return NO; }
+    CGRect rect = [self convertRect:self.bounds toView:view];
+    return CGRectContainsRect(view.bounds, rect);
+}
+@end
 
 @interface RTDefaultTransitionAnimation()
 /// maskView
 @property(nonatomic ,strong) UIView *maskView;
+/// isHidesBottomBar
+@property(nonatomic ,assign) BOOL isHidesBottomBar;
 @end
 
 @implementation RTDefaultTransitionAnimation
@@ -29,6 +43,7 @@
     self = [super init];
     if (self) {
         _operation = UINavigationControllerOperationNone;
+        _isHidesBottomBar = YES;
     }
     return self;
 }
@@ -102,7 +117,12 @@
     toView.layer.shadowOffset = CGSizeMake(-3.f, 0.f);
     toView.layer.shadowRadius = 5.f;
     toView.layer.shadowPath = [UIBezierPath bezierPathWithRect:toView.layer.bounds].CGPath;//CGPath(rect: to.view.layer.bounds, transform: nil);
-    from.navigationController.tabBarController.tabBar.hidden = to.hidesBottomBarWhenPushed || from.rt_tabbarSnapshot != nil;
+    if (self.operation == UINavigationControllerOperationPush){
+        from.navigationController.tabBarController.tabBar.hidden = to.hidesBottomBarWhenPushed;
+    }
+    else if (self.operation == UINavigationControllerOperationPop){
+        from.navigationController.tabBarController.tabBar.hidden = self.isHidesBottomBar;
+    }
     
     [UIView animateWithDuration:duration delay:0.f options:UIViewAnimationOptionCurveEaseInOut animations:^{
         self.maskView.layer.opacity = endOpacity;
@@ -126,6 +146,9 @@
                 toView.layer.shadowOffset = shadowOffsetBackup;
                 toView.layer.shadowRadius = shadowRadiusBackup;
                 toView.layer.shadowPath = shadowPathBackup;
+                if (to.navigationController.tabBarController){
+                    self.isHidesBottomBar = ![to.navigationController.tabBarController.tabBar rt_isContains:to.navigationController.tabBarController.view];
+                }
             }
         }
     }];
