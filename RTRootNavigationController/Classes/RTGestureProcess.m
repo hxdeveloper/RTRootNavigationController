@@ -9,16 +9,6 @@
 #import "RTGestureProcess.h"
 #import "RTRootNavigationController.h"
 
-#if DEBUG
-#define rt_keywordify autoreleasepool {}
-#else
-#define rt_keywordify try {} @catch (...) {}
-#endif
-typedef void (^rt_cleanupBlock_t)(void);
-static inline void rt_executeCleanupBlock (__strong rt_cleanupBlock_t *block){
-    (*block)();
-}
-
 @interface UIView (RTRootTransitionGestureProcess)
 /**
  Returns the view's view controller (may be nil).
@@ -74,7 +64,7 @@ static inline void rt_executeCleanupBlock (__strong rt_cleanupBlock_t *block){
 {
     self = [super init];
     if (self) {
-        _critical = 0.3f;
+        _critical = 0.5f;
         _popGestureRecognizer = [UIPanGestureRecognizer new];
         _popGestureRecognizer.maximumNumberOfTouches = 1;
         _popGestureRecognizer.delaysTouchesBegan = YES;
@@ -98,28 +88,33 @@ static inline void rt_executeCleanupBlock (__strong rt_cleanupBlock_t *block){
     if (!_container) {
         return;
     }
-    CGFloat progress = [recognizer translationInView:_container.view].x / recognizer.view.frame.size.width;
-    progress = MIN(1.f, MAX(0.f, ABS(progress)));
+    CGPoint translation = [recognizer translationInView:_container.view];
     
     id<RTViewControllerAnimatedTransitioning> animation = _container.contentViewController.rt_animationProcessing;
-    if (recognizer.state == UIGestureRecognizerStateBegan) {
-        if (!animation.interactiveTransition) {
+    
+    switch (recognizer.state) {
+        case UIGestureRecognizerStateBegan:
+        {
             animation.interactiveTransition = [UIPercentDrivenInteractiveTransition new];
             [_container.navigationController popViewControllerAnimated:YES];
         }
-    }
-    else if (recognizer.state == UIGestureRecognizerStateChanged){
-        [animation.interactiveTransition updateInteractiveTransition:progress];
-    }
-    else if (recognizer.state == UIGestureRecognizerStateEnded || recognizer.state == UIGestureRecognizerStateCancelled){
-        if (progress > _critical) {
-            [animation.interactiveTransition finishInteractiveTransition];
-        }else{
-            [animation.interactiveTransition cancelInteractiveTransition];
+            break;
+        case UIGestureRecognizerStateChanged:
+        {
+            [animation.interactiveTransition updateInteractiveTransition:(translation.x / _container.view.bounds.size.width)];
         }
-        animation.interactiveTransition = nil;
-    }else{
-        animation.interactiveTransition = nil;
+            break;
+        default:
+        {
+            CGPoint velocity = [recognizer velocityInView:_container.view];
+            if ((translation.x + velocity.x) / _container.view.bounds.size.width > _critical  || ABS(velocity.x) > 1000) {
+                [animation.interactiveTransition finishInteractiveTransition];
+            }else{
+                [animation.interactiveTransition cancelInteractiveTransition];
+            }
+            animation.interactiveTransition = nil;
+        }
+            break;
     }
 }
 
@@ -141,33 +136,20 @@ static inline void rt_executeCleanupBlock (__strong rt_cleanupBlock_t *block){
     }
     
     CGPoint translation = [gestureRecognizer translationInView:_container.view];
+    
     if (translation.x <= 0) {
-        return NO;
-    }
-    
-    CGPoint velocity = [gestureRecognizer velocityInView:_container.view];
-    
-    //低速滑动不响应
-    if (velocity.x <= 100) {
-        return NO;
-    }
-    
-    //高速滑动 直接返回
-    if (velocity.x > 1200) {
-        __weak __typeof(self)weakSelf = self;
-        @rt_keywordify
-        __strong rt_cleanupBlock_t rt_cleanupBlock __attribute__((cleanup(rt_executeCleanupBlock), unused)) = ^{
-            [weakSelf.container.navigationController popViewControllerAnimated:NO];
-        };
         return NO;
     }
     return YES;
 }
+
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {
+    
     if ([touch.view isKindOfClass:[UIControl class]]) {
         return !((UIControl *)touch.view).enabled;
     }
+    
     return YES;
 }
 
